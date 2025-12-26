@@ -1,36 +1,158 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Learning Webshop Project (Next.js + TypeScript + Prisma + MariaDB)
 
-## Getting Started
+This repository is a practice project created to learn and understand the fundamentals of our chosen full‑stack stack.  
+The goal is to build a simple webshop with:
 
-First, run the development server:
+- User registration
+- User login
+- Basic admin panel
+- CRUD operations for products
+- Database integration with MariaDB
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+This project is not intended for production use it is purely for learning, experimenting, and improving our workflow as a team.
+
+---
+
+## Tech Stack
+
+### **Frontend**
+- Next.js (App Router)
+- React
+- TypeScript
+- Tailwind CSS
+- ShadCN UI
+
+### **Backend**
+- Next.js API Routes
+- TypeScript
+- Prisma ORM
+
+### **Database**
+- MariaDB
+
+---
+
+## Project Goals
+
+This project is designed to help us:
+
+- Learn the basics of full‑stack development with Next.js
+- Understand how to structure a real project
+- Practice TypeScript in both frontend and backend
+- Work with Prisma and relational databases
+- Implement authentication (register + login)
+- Build a simple admin dashboard
+- Create CRUD operations for products
+- Improve teamwork, Git workflow, and clean code habits
+
+---
+
+## Planned Folder Structure (high‑level)
+
+```text
+/app
+  /api
+  /admin
+  /auth
+/components
+/lib
+/prisma
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+This structure may evolve as we learn and refine the project.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+---
 
-## Learn More
+## Features (Planned)
 
-To learn more about Next.js, take a look at the following resources:
+### **Authentication**
+- User registration
+- User login
+- Session handling
+- Basic access control (admin vs normal user)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### **Admin Panel**
+- Create product
+- Edit product
+- Delete product
+- List all products
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### **Webshop Basics**
+- Public product listing
+- Product details page
 
-## Deploy on Vercel
+---
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Learning Focus
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+We are intentionally avoiding AI‑generated code.  
+Instead, we use AI only for:
+
+- Explanations  
+- Architecture guidance  
+- Debugging help  
+- Concept clarification  
+
+All implementation will be written manually to ensure real understanding.
+
+---
+
+## Setup (to be expanded later)
+
+We will document the setup steps as we progress, including:
+
+- Installing dependencies  
+- Setting up the database  
+- Running Prisma migrations  
+- Starting the development server  
+
+This section will grow as we learn.
+
+---
+
+## Milestones
+
+### **Milestone 1: Project Setup**
+- Initialize Next.js + TypeScript project
+- Configure Tailwind + ShadCN UI
+- Set up Prisma + MariaDB connection
+- Create initial database schema
+
+### **Milestone 2: Authentication**
+- Registration page
+- Login page
+- Session handling
+- Basic protected routes
+
+### **Milestone 3: Admin CRUD**
+- Admin dashboard layout
+- Product create/edit/delete
+- Product list view
+
+### **Milestone 4: Webshop Frontend**
+- Public product listing
+- Product details page
+
+### **Milestone 5: Cleanup & Documentation**
+- Improve UI/UX
+- Add README updates
+- Refactor code where needed
+
+---
+
+## Team Workflow
+
+- English codebase and commit messages
+- Small, meaningful commits
+- No AI‑generated code only explanations
+- Use GitHub Issues + Milestones for planning
+- Review each other's work to learn together
+
+---
+
+## Notes
+
+This project is intentionally simple.  
+The purpose is to build confidence with the stack before starting larger, portfolio‑ready applications.
+
