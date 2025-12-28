@@ -66,21 +66,45 @@ export default function RegisterPage() {
     },
   })
 
-  function onSubmit(data: z.infer<typeof formSchema>) {
-    toast("You submitted the following values:", {
-      description: (
-        <pre className="bg-code text-code-foreground mt-2 w-[320px] overflow-x-auto rounded-md p-4">
-          <code>{JSON.stringify(data, null, 2)}</code>
-        </pre>
-      ),
-      position: "bottom-right",
-      classNames: {
-        content: "flex flex-col gap-2",
-      },
-      style: {
-        "--border-radius": "calc(var(--radius)  + 4px)",
-      } as React.CSSProperties,
-    })
+  async function onSubmit(data: z.infer<typeof formSchema>) {
+    try {
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json' 
+        },
+        body: JSON.stringify(data),
+      })
+      
+      const result = await response.json()
+      
+      if (!response.ok) {
+        toast.error(result.error || 'Registration failed', {
+          description: result.details 
+            ? JSON.stringify(result.details, null, 2)
+            : undefined,
+          position: "bottom-right",
+        })
+        return
+      }
+      
+      toast.success('Registration successful!', {
+        description: `Welcome, ${result.user.username}!`,
+        position: "bottom-right",
+      })
+      
+      form.reset()
+      
+      // Optional: redirect to login or dashboard
+      // router.push('/login')
+      
+    } catch (error) {
+      console.error('Registration error:', error)
+      toast.error('Something went wrong', {
+        description: 'Please try again later.',
+        position: "bottom-right",
+      })
+    }
   }
 
   return (
@@ -212,11 +236,20 @@ export default function RegisterPage() {
       </CardContent>
       <CardFooter>
         <Field orientation="horizontal">
-          <Button type="button" variant="outline" onClick={() => form.reset()}>
+          <Button 
+            type="button" 
+            variant="outline" 
+            onClick={() => form.reset()}
+            disabled={form.formState.isSubmitting}
+          >
             Reset
           </Button>
-          <Button type="submit" form="form-rhf-input">
-            Register
+          <Button 
+            type="submit" 
+            form="form-rhf-input"
+            disabled={form.formState.isSubmitting}
+          >
+            {form.formState.isSubmitting ? 'Registering...' : 'Register'}
           </Button>
         </Field>
       </CardFooter>
