@@ -71,6 +71,9 @@ export default function ProfileContent() {
                         value={field.value}
                         onChange={field.onChange}
                         placeholder="Enter phone number"
+                        numberInputProps={{
+                          className: 'flex h-9 w-full rounded-md border border-neutral-200 bg-transparent px-3 py-1 text-sm shadow-xs transition-colors placeholder:text-neutral-500 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-neutral-950/50 focus-visible:border-neutral-950 disabled:cursor-not-allowed disabled:opacity-50 dark:border-neutral-800 dark:placeholder:text-neutral-400 dark:focus-visible:ring-neutral-300/50 dark:focus-visible:border-neutral-300 dark:bg-neutral-900/30'
+                        }}
                       />
                       {fieldState.invalid && (
                         <FieldError errors={[fieldState.error]} />

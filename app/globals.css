@@ -135,29 +135,6 @@
   width: 100%;
 }
 
-.PhoneInputInput {
-  height: 2.25rem;
-  width: 100%;
-  border-radius: 0.375rem;
-  border: 1px solid #e5e5e5;
-  background-color: transparent;
-  padding: 0.25rem 0.75rem;
-  font-size: 0.875rem;
-  transition: color 0.2s, box-shadow 0.2s;
-  outline: none;
-  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  color: var(--foreground);
-}
-
-.PhoneInputInput::placeholder {
-  color: #737373;
-}
-
-.PhoneInputInput:focus-visible {
-  border-color: #0a0a0a;
-  box-shadow: 0 0 0 3px rgba(10, 10, 10, 0.5);
-}
-
 .PhoneInputCountrySelect {
   background-color: var(--background);
   color: var(--foreground);
@@ -188,29 +165,14 @@
   border-color: var(--border);
 }
 
-.dark .PhoneInputInput {
-  background-color: rgba(38, 38, 38, 0.3);
-  border-color: #262626;
-  color: #f5f5f5;
-}
-
-.dark .PhoneInputInput::placeholder {
-  color: #a3a3a3;
-}
-
-.dark .PhoneInputInput:focus-visible {
-  border-color: #d4d4d4;
-  box-shadow: 0 0 0 3px rgba(212, 212, 212, 0.5);
-}
-
 .dark .PhoneInputCountrySelect {
-  background-color: rgba(38, 38, 38, 0.3);
-  color: var(--card-foreground);
+  background-color: #0E0E0E;
+  color: #e9e2e2;
   border-color: var(--input);
 }
 
 .dark .PhoneInputCountrySelectDropdown {
-  background-color: var(--popover);
+  background-color: #0a0a0a;
   color: var(--popover-foreground);
 }
 
@@ -221,4 +183,42 @@
 .dark .PhoneInputCountryOption:hover {
   background-color: var(--accent);
   color: var(--accent-foreground);
+}
+
+.PhoneInputInput {
+  height: 2.25rem;
+  width: 100%;
+  border-radius: 0.375rem;
+  border: 1px solid #e5e5e5;
+  background-color: transparent;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.875rem;
+  transition: color 0.2s, box-shadow 0.2s;
+  outline: none;
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  color: var(--foreground);
+}
+
+.PhoneInputInput::placeholder {
+  color: #737373;
+}
+
+.PhoneInputInput:focus-visible {
+  border-color: #0a0a0a;
+  box-shadow: 0 0 0 3px rgba(10, 10, 10, 0.5);
+}
+
+/* Dark mode styles for PhoneInputInput */
+.dark .PhoneInputInput {
+  background-color: rgba(23, 23, 23, 0.3);
+  border-color: #262626;
+}
+
+.dark .PhoneInputInput::placeholder {
+  color: #a3a3a3;
+}
+
+.dark .PhoneInputInput:focus-visible {
+  border-color: #d4d4d4;
+  box-shadow: 0 0 0 3px rgba(212, 212, 212, 0.5);
 }
