@@ -90,11 +90,11 @@ export function LoginForm({
       }
       
       toast.success('Login successful!', {
-        description: `Welcome back, ${result.user.username || result.user.email}!`,
+        description: `Welcome back, ${result.username || result.email}!`,
         position: "bottom-right",
       })
       
-      onSuccess?.({ user: result.user })
+      onSuccess?.({ user: result })
       
     } catch (error) {
       console.error('Login error:', error)
