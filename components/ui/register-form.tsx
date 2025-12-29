@@ -24,6 +24,7 @@ import {
   FieldLabel,
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import { PasswordInput } from "@/components/ui/password-input"
 
 export const registerFormSchema = z.object({
   username: z
@@ -194,7 +195,7 @@ export function RegisterForm({
                   <FieldLabel htmlFor="form-rhf-input-password">
                     Password
                   </FieldLabel>
-                  <Input
+                  <PasswordInput
                     {...field}
                     id="form-rhf-input-password"
                     placeholder="Password"
@@ -215,7 +216,7 @@ export function RegisterForm({
                   <FieldLabel htmlFor="form-rhf-input-confirm-password">
                     Confirm Password
                   </FieldLabel>
-                  <Input
+                  <PasswordInput
                     {...field}
                     id="form-rhf-input-confirm-password"
                     placeholder="Confirm Password"
