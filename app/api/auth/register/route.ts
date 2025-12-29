@@ -3,6 +3,13 @@ import { prisma } from '@/lib/prisma'
 import { hashPassword } from '@/lib/hash'
 import { z } from 'zod'
 
+// {
+//  "username": "new_user",
+//  "email": "new@example.com",
+//  "password": "securepassword",
+//  "phone": "+1234567890"
+// }
+
 const registerSchema = z.object({
   username: z
     .string()
