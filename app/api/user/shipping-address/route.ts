@@ -2,6 +2,10 @@
 import { prisma } from '@/lib/prisma'
 import { getUserFromRequest } from "@/lib/auth"
 
+// {
+//   shipping_address: "123 Main St, Springfield, USA"  
+// }
+
 export async function GET(req: Request) {
   try {
     const userId = await getUserFromRequest(req)
