@@ -4,6 +4,11 @@ import { verifyPassword } from '@/lib/hash'
 import { cookies } from 'next/headers'
 import { prisma } from '@/lib/prisma'
 
+// { 
+//   "email": "user@example.com",
+//   "password": "securepassword"
+// }
+
 export async function POST(req: Request) {
   interface LoginBody { 
     email: string; 
