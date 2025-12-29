@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import bcrypt from 'bcryptjs'
+import { hashPassword } from '@/lib/hash'
 import { z } from 'zod'
 
 const registerSchema = z.object({
@@ -61,7 +61,8 @@ export async function POST(req: NextRequest) {
       }
     }
     
-    const hashedPassword = await bcrypt.hash(validatedData.password, 10)
+    //const hashedPassword = await bcrypt.hash(validatedData.password, 10) // created hashing function separately
+    const hashedPassword = await hashPassword(validatedData.password)
     
     const user = await prisma.users.create({
       data: {
