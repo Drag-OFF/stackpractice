@@ -15,7 +15,7 @@ export default function LoginPage() {
       <div className="w-full max-w-sm">
         <LoginForm 
           onSuccess={(data) => {
-            router.push('/')
+            router.push('/profile-page')
           }}
         />
       </div>
