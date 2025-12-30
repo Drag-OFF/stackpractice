@@ -14,31 +14,70 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FieldError } from "@/components/ui/field";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useForm, Controller } from "react-hook-form";
+import { useRouter } from "next/navigation";
 import PhoneInput from 'react-phone-number-input'
 import 'react-phone-number-input/style.css'
 
-export default function ProfileContent() {
+export default function ProfileContent({ user }: { user?: any }) {
+  const router = useRouter();
   const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [showSuccessNotification, setShowSuccessNotification] = useState(false);
   const [errors, setErrors] = useState<{
     currentPassword?: string;
     newPassword?: string;
     confirmPassword?: string;
   }>({});
+
+  const handleDeleteAccount = async () => {
+    setIsDeleting(true);
+    try {
+      const response = await fetch('/api/user/profile', { method: 'DELETE' });
+      if (!response.ok) {
+        const text = await response.text();
+        throw new Error(text || 'Failed to delete account');
+      }
+      toast.success('Account deleted', { position: 'bottom-right' });
+      router.push('/');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Delete failed';
+      toast.error(message, { position: 'bottom-right' });
+    } finally {
+      setIsDeleting(false);
+      setIsDeleteDialogOpen(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    try {
+      const response = await fetch('/api/auth/logout', { method: 'POST' });
+      if (!response.ok) throw new Error('Failed to logout');
+      toast.success('Logged out', { position: 'bottom-right' });
+      router.push('/login');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Logout failed';
+      toast.error(message, { position: 'bottom-right' });
+    } finally {
+      setIsLoggingOut(false);
+    }
+  };
   
   const form = useForm({
     defaultValues: {
-      firstName: "John",
-      email: "john.doe@example.com",
-      phone: "",
-      jobTitle: "Senior Product Designer",
-      company: "Acme Inc.",
-      bio: "Passionate product designer with 8+ years of experience creating user-centered digital experiences. I love solving complex problems and turning ideas into beautiful, functional products.",
-      location: "San Francisco, CA"
+      firstName: user?.name ?? user?.username ?? "",
+      email: user?.email ?? "",
+      phone: user?.phone ?? "",
+      jobTitle: "",
+      company: "",
+      bio: "",
+      location: ""
     }
   });
 
@@ -128,10 +167,11 @@ export default function ProfileContent() {
       />
 
       <Tabs defaultValue="personal" className="space-y-6">
-      <TabsList className="grid w-full grid-cols-4">
+      <TabsList className="grid w-full grid-cols-3">
         <TabsTrigger value="personal">Personal</TabsTrigger>
         <TabsTrigger value="account">Account</TabsTrigger>
-      </TabsList>
+        <TabsTrigger value="orders">Orders</TabsTrigger>  
+      </TabsList>   
 
       {/* Personal Information */}
       <TabsContent value="personal" className="space-y-6">
@@ -144,11 +184,11 @@ export default function ProfileContent() {
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="firstName">Name</Label>
-                <Input id="firstName" defaultValue="John" />
+                <Input id="firstName" defaultValue={form.getValues("firstName") || ""} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" defaultValue="john.doe@example.com" />
+                <Input id="email" type="email" defaultValue={form.getValues("email") || ""} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="phone">Phone</Label>
@@ -173,12 +213,12 @@ export default function ProfileContent() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="jobTitle">Job Title</Label>
-                <Input id="jobTitle" defaultValue="Senior Product Designer" />
+                <Input id="jobTitle" defaultValue={form.getValues("jobTitle") || ""} />
               </div>
             </div>
             <div className="space-y-2">
               <Label htmlFor="location">Location</Label>
-              <Input id="location" defaultValue="San Francisco, CA" />
+              <Input id="location" defaultValue={form.getValues("location") || ""} />
             </div>
           </CardContent>
         </Card>
@@ -193,12 +233,19 @@ export default function ProfileContent() {
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <Label className="text-base">Session</Label>
+                <p className="text-neutral-500 text-sm dark:text-neutral-400">Sign out of this device</p>
+              </div>
+              <Button variant="outline" onClick={handleLogout} disabled={isLoggingOut}>
+                {isLoggingOut ? 'Signing out...' : 'Sign Out'}
+              </Button>
             </div>
             <Separator />
             <div className="flex items-center justify-between">
               <div className="space-y-1">
                 <Label className="text-base">Password</Label>
-                <p className="text-neutral-500 text-sm dark:text-neutral-400">Last changed 3 months ago</p>
+                <p className="text-neutral-500 text-sm dark:text-neutral-400">Secure string of characters that protects you</p>
               </div>
               <Button variant="outline" onClick={() => setIsPasswordDialogOpen(true)}>
                 <Key className="mr-2 h-4 w-4" />
@@ -221,10 +268,24 @@ export default function ProfileContent() {
                   Permanently delete your account and all data
                 </p>
               </div>
-              <Button variant="destructive">
+              <Button variant="destructive" onClick={() => setIsDeleteDialogOpen(true)}>
                 <Trash2 className="mr-2 h-4 w-4" />
                 Delete Account
               </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </TabsContent>
+      
+      {/* Orders Settings */}
+      <TabsContent value="orders" className="space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Orders</CardTitle>
+            <CardDescription>Manage your orders and track status.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div>
             </div>
           </CardContent>
         </Card>
@@ -304,6 +365,30 @@ export default function ProfileContent() {
         </DialogFooter>
       </DialogContent>
     </Dialog>
+
+    {/* Delete Account Confirmation Dialog */}
+    <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Delete Account</DialogTitle>
+          <DialogDescription>
+            This action is irreversible. All your data will be permanently deleted. Are you sure you want to continue?
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4 py-4">
+          <p className="text-sm text-neutral-700 dark:text-neutral-300">This will permanently remove your account and you will be signed out.</p>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)} disabled={isDeleting}>
+            Cancel
+          </Button>
+          <Button variant="destructive" onClick={handleDeleteAccount} disabled={isDeleting}>
+            {isDeleting ? 'Deleting...' : 'Delete Account'}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+
     </>
   );
 }

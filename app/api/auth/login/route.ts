@@ -32,8 +32,6 @@ export async function POST(req: Request) {
     email: user.email,
     username: user.username,
     phone: user.phone,
-    shippingAddress: user.shipping_address,
-    billingAddress: user.billing_address,
     createdAt: user.created,
     role: user.role,
   })

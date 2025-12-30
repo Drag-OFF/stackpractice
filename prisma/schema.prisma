@@ -20,8 +20,6 @@ model users {
   is_active        Boolean  @default(true)
   role             String   @default("user") @db.VarChar(15)
   phone            String   @db.VarChar(40)
-  shipping_address String?  @db.Text()
-  billing_address  String?  @db.Text()
 }
 
 model products {
