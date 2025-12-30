@@ -48,3 +48,28 @@ export async function PUT(req: Request) {
     return new Response("Unauthorized", { status: 401 })
   }
 }
+
+export async function DELETE(req: Request) {
+  try {
+    const userId = await getUserFromRequest(req)
+
+    // Delete all user's addresses first (foreign key constraint)
+    await prisma.addresses.deleteMany({
+      where: { user_id: userId },
+    })
+
+    // Delete the user
+    await prisma.users.delete({
+      where: { id: userId },
+    })
+
+    // Clear the session cookie
+    const response = new Response("User deleted successfully", { status: 200 })
+    response.headers.set('Set-Cookie', 'session=; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=0')
+
+    return response
+  } catch (err) {
+    console.error("Error deleting user:", err)
+    return new Response("Unauthorized or deletion failed", { status: 401 })
+  }
+}
