@@ -33,10 +33,10 @@ export async function PUT(req: Request) {
     const userId = await getUserFromRequest(req)
     const body = await req.json()
 
-    // Basic validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    // Basic validation - strict ASCII email
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
     if (!body.email || !emailRegex.test(body.email)) {
-      return new Response("Invalid email", { status: 400 })
+      return new Response("Invalid email format", { status: 400 })
     }
 
     if (!body.username || body.username.length < 3) {
