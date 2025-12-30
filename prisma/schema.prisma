@@ -9,23 +9,37 @@ datasource db {
 }
 
 model users {
-  id               Int      @id @default(autoincrement())
-  username         String   @db.VarChar(50)
-  name             String   @db.VarChar(50)
-  password         String   @db.VarChar(255)
-  email            String?  @db.VarChar(250)
-  created          DateTime @default(now())
-  updated          DateTime @default(now()) @updatedAt
-  last_login       DateTime @default(now())
-  is_active        Boolean  @default(true)
-  role             String   @default("user") @db.VarChar(15)
-  phone            String   @db.VarChar(40)
-  shipping_address String?  @db.Text()
-  billing_address  String?  @db.Text()
+  id               Int         @id @default(autoincrement())
+  username         String      @db.VarChar(50)
+  name             String      @db.VarChar(50)
+  password         String      @db.VarChar(255)
+  email            String?     @db.VarChar(250)
+  created          DateTime    @default(now())
+  updated          DateTime    @default(now()) @updatedAt
+  last_login       DateTime    @default(now())
+  is_active        Boolean     @default(true)
+  role             String      @default("user") @db.VarChar(15)
+  phone            String      @db.VarChar(40)
+  addresses        addresses[]
+}
+
+enum AddressType {
+  SHIPPING
+  BILLING
+}
+
+model addresses {
+  id       Int          @id @default(autoincrement())
+  user_id  Int
+  type     AddressType  
+  street   String       @db.VarChar(255)
+  city     String       @db.VarChar(100)
+  zip      String       @db.VarChar(20)
+  country  String       @db.VarChar(100)
+  user     users        @relation(fields: [user_id], references: [id])
 }
 
 model products {
-  id       Int     @id @default(autoincrement())
-  name     String  @db.VarChar(50)
-
+  id   Int    @id @default(autoincrement())
+  name String @db.VarChar(50)
 }
