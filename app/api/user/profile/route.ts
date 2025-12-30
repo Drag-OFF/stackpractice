@@ -33,6 +33,27 @@ export async function PUT(req: Request) {
     const userId = await getUserFromRequest(req)
     const body = await req.json()
 
+    // Basic validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!body.email || !emailRegex.test(body.email)) {
+      return new Response("Invalid email", { status: 400 })
+    }
+
+    if (!body.username || body.username.length < 3) {
+      return new Response("Invalid username", { status: 400 })
+    }
+
+    // Uniqueness checks
+    const existingUsername = await prisma.users.findFirst({ where: { username: body.username, NOT: { id: userId } } })
+    if (existingUsername) {
+      return new Response("Username already in use", { status: 409 })
+    }
+
+    const existingEmail = await prisma.users.findFirst({ where: { email: body.email, NOT: { id: userId } } })
+    if (existingEmail) {
+      return new Response("Email already in use", { status: 409 })
+    }
+
     const updated = await prisma.users.update({
       where: { id: userId },
       data: {
@@ -44,7 +65,8 @@ export async function PUT(req: Request) {
     })
 
     return Response.json(updated)
-  } catch {
+  } catch (err) {
+    console.error('Error updating profile:', err)
     return new Response("Unauthorized", { status: 401 })
   }
 }

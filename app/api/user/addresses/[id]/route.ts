@@ -3,9 +3,13 @@ import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
 
 // GET - Address detail GET
+async function resolveParams(params: any) {
+  return params && typeof params.then === 'function' ? await params : params;
+}
+
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: any }
 ) {
   try {
     const session = await getSession();
@@ -13,7 +17,11 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const whereClause: any = { id: parseInt(params.id) };
+    const resolved = await resolveParams(params);
+    const id = parseInt(resolved?.id);
+    if (Number.isNaN(id)) return NextResponse.json({ error: 'Invalid id' }, { status: 400 });
+
+    const whereClause: any = { id };
     
     // Regular user can only view their own addresses
     if (session.role !== "admin") {
@@ -41,7 +49,7 @@ export async function GET(
 // PUT - Adress modify
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: any }
 ) {
   try {
     const session = await getSession();
@@ -52,7 +60,11 @@ export async function PUT(
     const body = await request.json();
     const { type, street, city, zip, country } = body;
 
-    const whereClause: any = { id: parseInt(params.id) };
+    const resolved = await resolveParams(params);
+    const id = parseInt(resolved?.id);
+    if (Number.isNaN(id)) return NextResponse.json({ error: 'Invalid id' }, { status: 400 });
+
+    const whereClause: any = { id };
     
     // Regular user can only modify their own addresses
     if (session.role !== "admin") {
@@ -68,8 +80,9 @@ export async function PUT(
     }
 
     const updatedAddress = await prisma.addresses.update({
-      where: { id: parseInt(params.id) },
+      where: { id },
       data: {
+        ...(id && { id } ),
         ...(type && { type }),
         ...(street && { street }),
         ...(city && { city }),
@@ -91,7 +104,7 @@ export async function PUT(
 // DELETE - Adress delete
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: any }
 ) {
   try {
     const session = await getSession();
@@ -99,7 +112,11 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const whereClause: any = { id: parseInt(params.id) };
+    const resolved = await resolveParams(params);
+    const id = parseInt(resolved?.id);
+    if (Number.isNaN(id)) return NextResponse.json({ error: 'Invalid id' }, { status: 400 });
+
+    const whereClause: any = { id };
     
     // Regular user can only delete their own addresses
     if (session.role !== "admin") {
@@ -115,7 +132,7 @@ export async function DELETE(
     }
 
     await prisma.addresses.delete({
-      where: { id: parseInt(params.id) },
+      where: { id },
     });
 
     return NextResponse.json({ message: "Address deleted successfully" });

@@ -1,7 +1,7 @@
 "use client";
 
 import { Key, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Notification } from "@/components/ui/notification";
@@ -35,6 +35,14 @@ export default function ProfileContent({ user }: { user?: any }) {
     confirmPassword?: string;
   }>({});
 
+  // General inline notification state (uses Notification component)
+  const [notification, setNotification] = useState<{
+    show: boolean;
+    type?: "success" | "error" | "warning" | "info";
+    title?: string;
+    message?: string;
+  }>({ show: false });
+
   const handleDeleteAccount = async () => {
     setIsDeleting(true);
     try {
@@ -43,11 +51,28 @@ export default function ProfileContent({ user }: { user?: any }) {
         const text = await response.text();
         throw new Error(text || 'Failed to delete account');
       }
-      toast.success('Account deleted', { position: 'bottom-right' });
-      router.push('/');
+
+      // Show inline success notification and delay redirect so user can see it
+      setNotification({
+        show: true,
+        type: 'success',
+        title: 'Account deleted',
+        message: 'Your account was deleted and you have been signed out.',
+      });
+
+      setTimeout(() => {
+        router.push('/');
+      }, 1200);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Delete failed';
-      toast.error(message, { position: 'bottom-right' });
+
+      // Show inline error notification
+      setNotification({
+        show: true,
+        type: 'error',
+        title: 'Deletion failed',
+        message,
+      });
     } finally {
       setIsDeleting(false);
       setIsDeleteDialogOpen(false);
@@ -68,10 +93,63 @@ export default function ProfileContent({ user }: { user?: any }) {
       setIsLoggingOut(false);
     }
   };
+
+  // Save personal information (username, name, email, phone)
+  const handleSavePersonal = async (data?: any) => {
+    const values = data ?? form.getValues();
+    setIsSavingPersonal(true);
+    try {
+      const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!values.email || !emailPattern.test(values.email)) {
+        setNotification({ show: true, type: 'error', title: 'Invalid email', message: 'Please enter a valid email address.' });
+        return;
+      }
+      if (!values.name || !values.username) {
+        setNotification({ show: true, type: 'error', title: 'Missing fields', message: 'Please provide both username and name.' });
+        return;
+      }
+
+      const res = await fetch('/api/user/profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: values.username, name: values.name, email: values.email, phone: values.phone }),
+      });
+
+      if (!res.ok) {
+        const txt = await res.text();
+        throw new Error(txt || 'Failed to save personal information');
+      }
+
+      const updated = await res.json();
+      form.reset({ ...form.getValues(), ...updated });
+      setNotification({ show: true, type: 'success', title: 'Saved', message: 'Personal information saved.' });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Save failed';
+      setNotification({ show: true, type: 'error', title: 'Save failed', message });
+    } finally {
+      setIsSavingPersonal(false);
+    }
+  };
   
+  type Address = {
+    id?: number;
+    type?: "SHIPPING" | "BILLING";
+    street?: string;
+    city?: string;
+    zip?: string;
+    country?: string;
+  };
+
+  const [addresses, setAddresses] = useState<{ shipping?: Address; billing?: Address }>({});
+  const [shippingFields, setShippingFields] = useState<Address>({});
+  const [billingFields, setBillingFields] = useState<Address>({});
+  const [isSavingAddress, setIsSavingAddress] = useState<{ shipping?: boolean; billing?: boolean }>({});
+  const [isSavingPersonal, setIsSavingPersonal] = useState(false);
+
   const form = useForm({
     defaultValues: {
-      firstName: user?.name ?? user?.username ?? "",
+      username: user?.username ?? "",
+      name: user?.name ?? user?.username ?? "",
       email: user?.email ?? "",
       phone: user?.phone ?? "",
       jobTitle: "",
@@ -80,6 +158,72 @@ export default function ProfileContent({ user }: { user?: any }) {
       location: ""
     }
   });
+
+  useEffect(() => {
+    const fetchAddresses = async () => {
+      try {
+        const res = await fetch('/api/user/addresses');
+        if (!res.ok) throw new Error('Failed to fetch addresses');
+        const data: Address[] = await res.json();
+        const shipping = data.find((a) => a.type === 'SHIPPING');
+        const billing = data.find((a) => a.type === 'BILLING');
+        setAddresses({ shipping, billing });
+        if (shipping) setShippingFields(shipping);
+        if (billing) setBillingFields(billing);
+      } catch (err) {
+        // don't block the page if addresses fail
+        console.error(err);
+      }
+    };
+
+    fetchAddresses();
+  }, []);
+
+  const handleSaveAddress = async (which: 'shipping' | 'billing') => {
+    const fields = which === 'shipping' ? shippingFields : billingFields;
+    const type = which === 'shipping' ? 'SHIPPING' : 'BILLING';
+
+    // basic validation
+    if (!fields.street || !fields.city || !fields.zip || !fields.country) {
+      setNotification({ show: true, type: 'error', title: 'Missing fields', message: 'All address fields are required.' });
+      return;
+    }
+
+    setIsSavingAddress((s) => ({ ...s, [which]: true }));
+
+    try {
+      if (fields.id) {
+        // Update
+        const res = await fetch(`/api/user/addresses/${fields.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ street: fields.street, city: fields.city, zip: fields.zip, country: fields.country }),
+        });
+        if (!res.ok) throw new Error(await res.text());
+        const updated = await res.json();
+        setAddresses((prev) => ({ ...prev, [which]: updated }));
+        setNotification({ show: true, type: 'success', title: 'Address updated', message: `${type.toLowerCase()} address saved.` });
+      } else {
+        // Create
+        const res = await fetch('/api/user/addresses', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ type, street: fields.street, city: fields.city, zip: fields.zip, country: fields.country }),
+        });
+        if (!res.ok) throw new Error(await res.text());
+        const created = await res.json();
+        setAddresses((prev) => ({ ...prev, [which]: created }));
+        setShippingFields((s) => (which === 'shipping' ? created : s));
+        setBillingFields((b) => (which === 'billing' ? created : b));
+        setNotification({ show: true, type: 'success', title: 'Address created', message: `${type.toLowerCase()} address saved.` });
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Address save failed';
+      setNotification({ show: true, type: 'error', title: 'Save failed', message });
+    } finally {
+      setIsSavingAddress((s) => ({ ...s, [which]: false }));
+    }
+  };
 
   const handlePasswordChange = async () => {
     // Reset errors
@@ -183,12 +327,19 @@ export default function ProfileContent({ user }: { user?: any }) {
           <CardContent className="space-y-6">
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="firstName">Name</Label>
-                <Input id="firstName" defaultValue={form.getValues("firstName") || ""} />
+                <Label htmlFor="username">Username</Label>
+                <Input id="username" {...form.register('username', { required: true, minLength: 3 })} />
+                {form.formState.errors.username && <p className="text-sm text-red-500">Username is required (min 3 chars)</p>}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="name">Name</Label>
+                <Input id="name" {...form.register('name', { required: true })} />
+                {form.formState.errors.name && <p className="text-sm text-red-500">Name is required</p>}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" defaultValue={form.getValues("email") || ""} />
+                <Input id="email" type="email" {...form.register('email', { required: true, pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/ })} />
+                {form.formState.errors.email && <p className="text-sm text-red-500">Enter a valid email (e.g., name@example.com)</p>}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="phone">Phone</Label>
@@ -211,14 +362,88 @@ export default function ProfileContent({ user }: { user?: any }) {
                   )}
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="jobTitle">Job Title</Label>
-                <Input id="jobTitle" defaultValue={form.getValues("jobTitle") || ""} />
-              </div>
             </div>
+
+            {/* Location (read-only) */}
             <div className="space-y-2">
               <Label htmlFor="location">Location</Label>
-              <Input id="location" defaultValue={form.getValues("location") || ""} />
+              {/** Display assembled location from shipping address: "Country, ZIP City Street" */}
+              {(() => {
+                const locationStr = (() => {
+                  if (shippingFields && (shippingFields.country || shippingFields.zip || shippingFields.city || shippingFields.street)) {
+                    const country = (shippingFields.country || '').trim();
+                    const zipCity = [shippingFields.zip, shippingFields.city].filter(Boolean).join(' ');
+                    const street = (shippingFields.street || '').trim();
+                    const rest = [zipCity, street].filter(Boolean).join(' ').trim();
+                    return [country, rest].filter(Boolean).join(', ');
+                  }
+                  return form.getValues("location") || "";
+                })();
+
+                return <Input id="location" value={locationStr} readOnly aria-readonly="true" />;
+              })()}
+            </div>
+
+            <div className="mt-3 flex">
+              <Button variant="secondary" onClick={form.handleSubmit(handleSavePersonal)} disabled={isSavingPersonal}>
+                {isSavingPersonal ? 'Saving...' : 'Save Personal Information'}
+              </Button>
+            </div>
+
+            {/* Address: Shipping */}
+            <div className="mt-6">
+              <h3 className="text-lg font-medium">Shipping Address</h3>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 mt-3">
+                <div className="space-y-2">
+                  <Label htmlFor="shipping-street">Street</Label>
+                  <Input id="shipping-street" value={shippingFields.street || ''} onChange={(e) => setShippingFields({ ...shippingFields, street: e.target.value })} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="shipping-city">City</Label>
+                  <Input id="shipping-city" value={shippingFields.city || ''} onChange={(e) => setShippingFields({ ...shippingFields, city: e.target.value })} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="shipping-zip">ZIP</Label>
+                  <Input id="shipping-zip" value={shippingFields.zip || ''} onChange={(e) => setShippingFields({ ...shippingFields, zip: e.target.value })} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="shipping-country">Country</Label>
+                  <Input id="shipping-country" value={shippingFields.country || ''} onChange={(e) => setShippingFields({ ...shippingFields, country: e.target.value })} />
+                </div>
+              </div>
+              <div className="mt-3">
+                <Button variant="secondary" onClick={() => handleSaveAddress('shipping')} disabled={isSavingAddress.shipping}>
+                  {isSavingAddress.shipping ? 'Saving...' : 'Save Shipping Address'}
+                </Button>
+              </div>
+            </div>
+
+            {/* Address: Billing */}
+            <div className="mt-6">
+              <h3 className="text-lg font-medium">Billing Address</h3>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 mt-3">
+                <div className="space-y-2">
+                  <Label htmlFor="billing-street">Street</Label>
+                  <Input id="billing-street" value={billingFields.street || ''} onChange={(e) => setBillingFields({ ...billingFields, street: e.target.value })} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="billing-city">City</Label>
+                  <Input id="billing-city" value={billingFields.city || ''} onChange={(e) => setBillingFields({ ...billingFields, city: e.target.value })} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="billing-zip">ZIP</Label>
+                  <Input id="billing-zip" value={billingFields.zip || ''} onChange={(e) => setBillingFields({ ...billingFields, zip: e.target.value })} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="billing-country">Country</Label>
+                  <Input id="billing-country" value={billingFields.country || ''} onChange={(e) => setBillingFields({ ...billingFields, country: e.target.value })} />
+                </div>
+              </div>
+              <div className="mt-3">
+                <Button variant="secondary" onClick={() => handleSaveAddress('billing')} disabled={isSavingAddress.billing}>
+                  {isSavingAddress.billing ? 'Saving...' : 'Save Billing Address'}
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -388,6 +613,15 @@ export default function ProfileContent({ user }: { user?: any }) {
         </DialogFooter>
       </DialogContent>
     </Dialog>
+
+    {/* Inline notification for delete success/error (uses Notification component) */}
+    <Notification
+      show={notification.show}
+      onClose={() => setNotification({ ...notification, show: false })}
+      type={notification.type}
+      title={notification.title}
+      message={notification.message}
+    />
 
     </>
   );
