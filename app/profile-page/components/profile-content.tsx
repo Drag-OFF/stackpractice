@@ -14,6 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FieldError } from "@/components/ui/field";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useForm, Controller } from "react-hook-form";
+import { loginFormSchema } from "@/components/ui/login-form";
 import { useRouter } from "next/navigation";
 import PhoneInput from 'react-phone-number-input'
 import 'react-phone-number-input/style.css'
@@ -99,9 +100,10 @@ export default function ProfileContent({ user }: { user?: any }) {
     const values = data ?? form.getValues();
     setIsSavingPersonal(true);
     try {
-      const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!values.email || !emailPattern.test(values.email)) {
-        setNotification({ show: true, type: 'error', title: 'Invalid email', message: 'Please enter a valid email address.' });
+      const email = (values.email || '').trim();
+      const emailCheck = loginFormSchema.shape.email.safeParse(email);
+      if (!email || !emailCheck.success) {
+        setNotification({ show: true, type: 'error', title: 'Invalid email', message: emailCheck.success ? 'Please enter a valid email address.' : emailCheck.error.issues[0].message });
         return;
       }
       if (!values.name || !values.username) {
@@ -338,8 +340,8 @@ export default function ProfileContent({ user }: { user?: any }) {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" {...form.register('email', { required: true, pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/ })} />
-                {form.formState.errors.email && <p className="text-sm text-red-500">Enter a valid email (e.g., name@example.com)</p>}
+                <Input id="email" type="email" {...form.register('email', { required: 'Email is required', validate: (v) => loginFormSchema.shape.email.safeParse((v || '').trim()).success || 'Enter a valid email (e.g., name@example.com)' })} />
+                {form.formState.errors.email && <p className="text-sm text-red-500">{String(form.formState.errors.email?.message || 'Enter a valid email (e.g., name@example.com)')}</p>} 
               </div>
               <div className="space-y-2">
                 <Label htmlFor="phone">Phone</Label>
